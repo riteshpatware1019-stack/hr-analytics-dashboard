@@ -11,22 +11,35 @@ st.title("📊 HR Analytics Dashboard")
 
 df = pd.read_csv("data/cleaned_hr_data.csv")
 
+st.sidebar.header("Filters")
+
+department = st.sidebar.multiselect(
+    "Department",
+    df["Department"].unique(),
+    default=df["Department"].unique()
+)
+gender = st.sidebar.multiselect(
+    "Gender",
+    df["Gender"].unique(),
+    default=df["Gender"].unique()
+)
+filtered_df = df[
+    (df["Department"].isin(department)) &
+    (df["Gender"].isin(gender))
+]
+
 
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric("Employees", len(df)) # Total Employees
-col2.metric("Average Salary", f"{df['Salary'].mean():,.0f}") #Average Salary
-col3.metric("Average Age", round(df["Age"].mean(), 1)) #Attrition Rate
-col4.metric(
-    "Attrition Rate",
-    f"{(df['Attrition'].eq('Yes').mean()*100):.1f}%" 
-) #Average Age
+col1.metric("Employees", len(filtered_df))
 
+col2.metric("Average Salary",f"{filtered_df['Salary'].mean():,.0f}")
 
-department = st.sidebar.selectbox(
-    "Department",
-    ["All"] + sorted(df["Department"].unique().tolist())
-)
+col3.metric("Average Age",round(filtered_df["Age"].mean(),1))
+
+attrition = (filtered_df["Attrition"].value_counts(normalize=True).get("Yes",0))*100
+
+col4.metric("Attrition Rate", f"{attrition:.1f}%")
 
 
 st.dataframe(df)
